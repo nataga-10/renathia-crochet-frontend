@@ -62,7 +62,14 @@ export default function RegisterPage() {
           />
           {errors.password && <p style={{ color: "red" }}>{errors.password.message}</p>}
         </div>
-
+        <div style={{ marginBottom: "15px" }}>
+          <label>Teléfono (opcional)</label>
+          <input
+            {...register("phone")}
+            placeholder="Tu número de teléfono"
+            style={{ width: "100%", padding: "8px" }}
+          />
+        </div>   
         {mensaje && <p style={{ color: "blue" }}>{mensaje}</p>}
 
         <button type="submit" style={{ width: "100%", padding: "10px", backgroundColor: "#6B2D8B", color: "white", border: "none", cursor: "pointer" }}>
