@@ -3,11 +3,20 @@ import { register as registerUser } from "../../services/authService";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
+/**
+ * Página de registro de nuevos usuarios.
+ * Valida el formulario con react-hook-form y redirige al login tras el registro exitoso.
+ * El teléfono es opcional.
+ */
 export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const navigate = useNavigate();
   const [mensaje, setMensaje] = useState("");
 
+  /**
+   * Envía los datos de registro al backend.
+   * Espera 2 segundos antes de redirigir para que el usuario vea el mensaje de éxito.
+   */
   const onSubmit = async (data) => {
     try {
       const result = await registerUser(data);

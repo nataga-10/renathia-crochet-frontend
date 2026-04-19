@@ -4,6 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
 
+/**
+ * Página de inicio de sesión.
+ * Valida el formulario con react-hook-form, llama al servicio de autenticación
+ * y redirige al catálogo si el login es exitoso.
+ */
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const navigate = useNavigate();
@@ -11,10 +16,15 @@ export default function LoginPage() {
   const [mensaje, setMensaje] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  /**
+   * Maneja el envío del formulario. Guarda el token en el contexto global
+   * y redirige al catálogo en caso de éxito.
+   */
   const onSubmit = async (data) => {
     try {
       const result = await loginUser(data);
       if (result.success) {
+        // Guardar el objeto de respuesta completo como userData y el token por separado
         login(result, result.token);
         navigate("/catalogo");
       } else {
