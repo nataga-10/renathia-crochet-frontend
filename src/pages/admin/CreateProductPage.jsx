@@ -3,14 +3,25 @@ import { createProduct } from "../../services/productService";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
+/**
+ * Página de creación de producto para el panel de administración.
+ * Construye un FormData para enviar datos e imagen en una sola solicitud multipart.
+ * Redirige al listado de productos tras la creación exitosa.
+ */
 export default function CreateProductPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const navigate = useNavigate();
   const [mensaje, setMensaje] = useState("");
+  // Estado separado para el archivo de imagen (no manejado por react-hook-form)
   const [imagen, setImagen] = useState(null);
 
+  /**
+   * Construye el FormData con los datos del formulario y la imagen seleccionada,
+   * luego envía la solicitud de creación al backend.
+   */
   const onSubmit = async (data) => {
     try {
+      // Usar FormData porque el endpoint acepta multipart/form-data (imagen incluida)
       const formData = new FormData();
       formData.append("name", data.name);
       formData.append("description", data.description || "");
@@ -18,7 +29,7 @@ export default function CreateProductPage() {
       formData.append("stock", data.stock);
       formData.append("isMadeToOrder", data.isMadeToOrder || false);
       formData.append("categoryId", data.categoryId || "");
-      if (imagen) formData.append("image", imagen);
+      if (imagen) formData.append("image", imagen); // La imagen es opcional
 
       await createProduct(formData);
       setMensaje("¡Producto creado exitosamente!");

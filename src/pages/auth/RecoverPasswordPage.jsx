@@ -2,10 +2,16 @@ import { useForm } from "react-hook-form";
 import { recoverPassword } from "../../services/authService";
 import { useState } from "react";
 
+/**
+ * Página de recuperación de contraseña.
+ * Solo solicita el correo. El backend siempre retorna el mismo mensaje
+ * para no revelar si el correo existe en el sistema (práctica de seguridad).
+ */
 export default function RecoverPasswordPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [mensaje, setMensaje] = useState("");
 
+  /** Envía la solicitud de recuperación y muestra el mensaje del backend. */
   const onSubmit = async (data) => {
     try {
       const result = await recoverPassword(data.email);

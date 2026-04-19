@@ -3,16 +3,28 @@ import { getProductById, updateProduct } from "../../services/productService";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 
+/**
+ * Página de edición de producto para el panel de administración.
+ * Carga los datos actuales del producto al montar el componente y los inyecta
+ * en el formulario usando setValue de react-hook-form.
+ * Incluye el campo isActive para activar/desactivar el producto.
+ */
 export default function EditProductPage() {
+  // Obtener el ID del producto desde la URL (/admin/productos/editar/:id)
   const { id } = useParams();
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
   const navigate = useNavigate();
   const [mensaje, setMensaje] = useState("");
 
+  // Cargar el producto existente al montar el componente
   useEffect(() => {
     loadProduct();
   }, []);
 
+  /**
+   * Obtiene el producto por ID y pre-rellena el formulario con sus datos actuales.
+   * Usa setValue para inyectar cada campo individualmente en react-hook-form.
+   */
   const loadProduct = async () => {
     try {
       const product = await getProductById(id);
@@ -21,12 +33,16 @@ export default function EditProductPage() {
       setValue("basePrice", product.basePrice);
       setValue("stock", product.stock);
       setValue("isMadeToOrder", product.isMadeToOrder);
-      setValue("isActive", product.isActive);
+      setValue("isActive", product.isActive); // Permite activar/desactivar el producto
     } catch (error) {
       setMensaje("Error al cargar el producto");
     }
   };
 
+  /**
+   * Envía los datos actualizados al backend usando JSON (sin imagen).
+   * Redirige al listado tras la actualización exitosa.
+   */
   const onSubmit = async (data) => {
     try {
       await updateProduct(id, data);

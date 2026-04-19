@@ -2,15 +2,22 @@ import { useEffect, useState } from "react";
 import { getProducts, deleteProduct } from "../../services/productService";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * Página de administración de productos.
+ * Muestra la lista completa en una tabla con opciones de editar y eliminar.
+ * Solo accesible para administradores (sin control de acceso implementado aún).
+ */
 export default function ProductsAdminPage() {
   const [products, setProducts] = useState([]);
   const [mensaje, setMensaje] = useState("");
   const navigate = useNavigate();
 
+  // Cargar productos al montar el componente
   useEffect(() => {
     loadProducts();
   }, []);
 
+  /** Obtiene todos los productos y actualiza la tabla. */
   const loadProducts = async () => {
     try {
       const result = await getProducts();
@@ -24,12 +31,17 @@ export default function ProductsAdminPage() {
     }
   };
 
+  /**
+   * Muestra una confirmación antes de eliminar el producto.
+   * Recarga la lista automáticamente tras la eliminación exitosa.
+   * @param {number} id - ID del producto a eliminar
+   */
   const handleDelete = async (id) => {
     if (window.confirm("¿Estás segura de eliminar este producto?")) {
       try {
         await deleteProduct(id);
         setMensaje("Producto eliminado correctamente");
-        loadProducts();
+        loadProducts(); // Refrescar la tabla después de eliminar
       } catch (error) {
         setMensaje("Error al eliminar el producto");
       }
