@@ -16,10 +16,10 @@ export const getCart = async (token) => {
 
 // HU-05: Agrega un producto al carrito
 // Si el carrito no existe lo crea automaticamente
-export const addToCart = async (token, productId, quantity = 1, productColorId = null) => {
+export const addToCart = async (token, productId, quantity = 1, productColorId = null, customPrice = null, customizationNotes = null) => {
   const response = await axios.post(
     `${API_URL}/Cart`,
-    { productId, quantity, productColorId },
+    { productId, quantity, productColorId, customPrice, customizationNotes },
     authHeader(token)
   );
   return response.data;

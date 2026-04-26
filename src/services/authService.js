@@ -35,3 +35,17 @@ export const recoverPassword = async (email) => {
   const response = await axios.post(`${API_URL}/auth/recover-password`, { email });
   return response.data;
 };
+
+export const getProfile = async (token) => {
+  const response = await axios.get(`${API_URL}/auth/profile`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const updateProfile = async (token, data) => {
+  const response = await axios.put(`${API_URL}/auth/profile`, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};

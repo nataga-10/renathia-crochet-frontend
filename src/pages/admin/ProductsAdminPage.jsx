@@ -2,100 +2,184 @@ import { useEffect, useState } from "react";
 import { getProducts, deleteProduct } from "../../services/productService";
 import { useNavigate } from "react-router-dom";
 
-/**
- * Página de administración de productos.
- * Muestra la lista completa en una tabla con opciones de editar y eliminar.
- * Solo accesible para administradores (sin control de acceso implementado aún).
- */
 export default function ProductsAdminPage() {
   const [products, setProducts] = useState([]);
   const [mensaje, setMensaje] = useState("");
   const navigate = useNavigate();
 
-  // Cargar productos al montar el componente
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  useEffect(() => { loadProducts(); }, []);
 
-  /** Obtiene todos los productos y actualiza la tabla. */
   const loadProducts = async () => {
     try {
       const result = await getProducts();
       if (result.message) {
         setMensaje(result.message);
+        setProducts([]);
       } else {
         setProducts(result);
       }
-    } catch (error) {
+    } catch {
       setMensaje("Error al cargar los productos");
     }
   };
 
-  /**
-   * Muestra una confirmación antes de eliminar el producto.
-   * Recarga la lista automáticamente tras la eliminación exitosa.
-   * @param {number} id - ID del producto a eliminar
-   */
   const handleDelete = async (id) => {
     if (window.confirm("¿Estás segura de eliminar este producto?")) {
       try {
         await deleteProduct(id);
-        setMensaje("Producto eliminado correctamente");
-        loadProducts(); // Refrescar la tabla después de eliminar
-      } catch (error) {
+        loadProducts();
+      } catch {
         setMensaje("Error al eliminar el producto");
       }
     }
   };
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "30px auto", padding: "20px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>Gestión de Productos - RENATHIA CROCHET</h2>
-        <button
-          onClick={() => navigate("/admin/productos/crear")}
-          style={{ padding: "10px 20px", backgroundColor: "#6B2D8B", color: "white", border: "none", cursor: "pointer", borderRadius: "5px" }}>
-          + Nuevo Producto
+    <div className="page">
+      <div style={styles.header}>
+        <div>
+          <h2 style={{ margin: 0, color: "var(--pink-dark)" }}>Gestión de Productos</h2>
+          <p style={{ color: "var(--gray)", fontSize: 14, marginTop: 4 }}>
+            {products.length} producto{products.length !== 1 ? "s" : ""} en catálogo
+          </p>
+        </div>
+        <button className="btn-primary" onClick={() => navigate("/admin/productos/crear")}>
+          + Nuevo producto
         </button>
       </div>
 
-      {mensaje && <p style={{ color: "gray" }}>{mensaje}</p>}
+      {mensaje && products.length === 0 && (
+        <div style={styles.empty}>
+          <span style={{ fontSize: 48 }}>🧶</span>
+          <p style={{ color: "var(--gray)", marginTop: 12 }}>{mensaje}</p>
+          <button className="btn-primary" style={{ marginTop: 16 }} onClick={() => navigate("/admin/productos/crear")}>
+            Crear primer producto
+          </button>
+        </div>
+      )}
 
-      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
-        <thead>
-          <tr style={{ backgroundColor: "#6B2D8B", color: "white" }}>
-            <th style={{ padding: "10px", textAlign: "left" }}>ID</th>
-            <th style={{ padding: "10px", textAlign: "left" }}>Nombre</th>
-            <th style={{ padding: "10px", textAlign: "left" }}>Categoría</th>
-            <th style={{ padding: "10px", textAlign: "left" }}>Precio</th>
-            <th style={{ padding: "10px", textAlign: "left" }}>Stock</th>
-            <th style={{ padding: "10px", textAlign: "left" }}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product, i) => (
-            <tr key={product.productId} style={{ backgroundColor: i % 2 === 0 ? "white" : "#f5f5f5" }}>
-              <td style={{ padding: "10px" }}>{product.productId}</td>
-              <td style={{ padding: "10px" }}>{product.name}</td>
-              <td style={{ padding: "10px" }}>{product.categoryName || "Sin categoría"}</td>
-              <td style={{ padding: "10px" }}>${product.basePrice.toLocaleString()}</td>
-              <td style={{ padding: "10px" }}>{product.stock}</td>
-              <td style={{ padding: "10px" }}>
-                <button
-                  onClick={() => navigate(`/admin/productos/editar/${product.productId}`)}
-                  style={{ marginRight: "8px", padding: "6px 12px", backgroundColor: "#1A4A8A", color: "white", border: "none", cursor: "pointer", borderRadius: "4px" }}>
-                  Editar
-                </button>
-                <button
-                  onClick={() => handleDelete(product.productId)}
-                  style={{ padding: "6px 12px", backgroundColor: "#A00000", color: "white", border: "none", cursor: "pointer", borderRadius: "4px" }}>
-                  Eliminar
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {products.length > 0 && (
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <table style={styles.table}>
+            <thead>
+              <tr style={styles.thead}>
+                <th style={styles.th}>ID</th>
+                <th style={styles.th}>Nombre</th>
+                <th style={styles.th}>Categoría</th>
+                <th style={styles.th}>Precio</th>
+                <th style={styles.th}>Stock</th>
+                <th style={styles.th}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((p, i) => (
+                <tr key={p.productId} style={{ background: i % 2 === 0 ? "var(--white)" : "var(--pink-light)" }}>
+                  <td style={styles.td}>#{p.productId}</td>
+                  <td style={{ ...styles.td, fontWeight: 500 }}>{p.name}</td>
+                  <td style={styles.td}>
+                    <span style={styles.badge}>{p.categoryName || "Sin categoría"}</span>
+                  </td>
+                  <td style={styles.td}>${p.basePrice.toLocaleString()}</td>
+                  <td style={styles.td}>
+                    <span style={{
+                      ...styles.stockBadge,
+                      background: p.stock > 0 ? "var(--green-light)" : "#FDE8EF",
+                      color: p.stock > 0 ? "var(--green-dark)" : "var(--pink-dark)",
+                    }}>
+                      {p.stock > 0 ? p.stock : "Agotado"}
+                    </span>
+                  </td>
+                  <td style={styles.td}>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        style={styles.btnEdit}
+                        onClick={() => navigate(`/admin/productos/editar/${p.productId}`)}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        style={styles.btnDelete}
+                        onClick={() => handleDelete(p.productId)}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
+
+const styles = {
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  empty: {
+    textAlign: "center",
+    padding: "60px 20px",
+    background: "var(--white)",
+    borderRadius: 16,
+    boxShadow: "var(--shadow)",
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+  },
+  thead: {
+    background: "linear-gradient(90deg, var(--pink) 0%, var(--green) 100%)",
+  },
+  th: {
+    padding: "14px 16px",
+    textAlign: "left",
+    color: "white",
+    fontWeight: 600,
+    fontSize: 14,
+  },
+  td: {
+    padding: "12px 16px",
+    fontSize: 14,
+    borderBottom: "1px solid var(--border)",
+  },
+  badge: {
+    background: "var(--green-light)",
+    color: "var(--green-dark)",
+    padding: "3px 10px",
+    borderRadius: 20,
+    fontSize: 12,
+    fontWeight: 500,
+  },
+  stockBadge: {
+    padding: "3px 10px",
+    borderRadius: 20,
+    fontSize: 12,
+    fontWeight: 500,
+  },
+  btnEdit: {
+    background: "var(--pink-light)",
+    color: "var(--pink-dark)",
+    border: "1px solid var(--pink)",
+    borderRadius: 6,
+    padding: "5px 12px",
+    fontSize: 13,
+    cursor: "pointer",
+    fontWeight: 500,
+  },
+  btnDelete: {
+    background: "#FDE8EF",
+    color: "#C0405A",
+    border: "1px solid #F4A7BB",
+    borderRadius: 6,
+    padding: "5px 12px",
+    fontSize: 13,
+    cursor: "pointer",
+    fontWeight: 500,
+  },
+};

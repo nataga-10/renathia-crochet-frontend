@@ -1,35 +1,41 @@
-/**
- * Contexto global de autenticación.
- * Provee el estado del usuario y token JWT, y las funciones login/logout
- * a todos los componentes de la aplicación mediante React Context.
- */
 import { createContext, useContext, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 
 const AuthContext = createContext();
 
 /**
- * Proveedor del contexto de autenticación.
- * El token se persiste en localStorage para sobrevivir recargas de página.
+ * Decodifica el JWT y extrae los datos del usuario (id, email, nombre, roleId).
+ * Retorna null si el token es inválido o está expirado.
  */
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  // Restaurar el token del localStorage al iniciar la app (sesión persistente)
-  const [token, setToken] = useState(localStorage.getItem("token") || null);
+function decodeToken(token) {
+  if (!token) return null;
+  try {
+    const decoded = jwtDecode(token);
+    // Verificar expiración
+    if (decoded.exp && decoded.exp * 1000 < Date.now()) return null;
+    return {
+      userId: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"],
+      email: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
+      fullName: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
+      roleId: parseInt(decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]),
+    };
+  } catch {
+    return null;
+  }
+}
 
-  /**
-   * Guarda los datos del usuario y el JWT en estado y localStorage.
-   * @param {object} userData - Objeto de respuesta del login (incluye token, message, success)
-   * @param {string} userToken - JWT retornado por el backend
-   */
+export function AuthProvider({ children }) {
+  const storedToken = localStorage.getItem("token") || null;
+  // Restaurar usuario desde el token guardado al iniciar la app
+  const [user, setUser] = useState(() => decodeToken(storedToken));
+  const [token, setToken] = useState(storedToken);
+
   const login = (userData, userToken) => {
-    setUser(userData);
     setToken(userToken);
+    setUser(decodeToken(userToken));
     localStorage.setItem("token", userToken);
   };
 
-  /**
-   * Limpia el estado de autenticación y elimina el token del localStorage.
-   */
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -43,10 +49,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-/**
- * Hook personalizado para acceder al contexto de autenticación.
- * Usar dentro de componentes envueltos por AuthProvider.
- */
 export function useAuth() {
   return useContext(AuthContext);
 }

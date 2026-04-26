@@ -3,12 +3,8 @@ import { login as loginUser } from "../../services/authService";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
+import logo from "../../assets/renathia_logo.png";
 
-/**
- * Página de inicio de sesión.
- * Valida el formulario con react-hook-form, llama al servicio de autenticación
- * y redirige al catálogo si el login es exitoso.
- */
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const navigate = useNavigate();
@@ -16,74 +12,135 @@ export default function LoginPage() {
   const [mensaje, setMensaje] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  /**
-   * Maneja el envío del formulario. Guarda el token en el contexto global
-   * y redirige al catálogo en caso de éxito.
-   */
   const onSubmit = async (data) => {
     try {
       const result = await loginUser(data);
       if (result.success) {
-        // Guardar el objeto de respuesta completo como userData y el token por separado
         login(result, result.token);
         navigate("/catalogo");
       } else {
         setMensaje(result.message);
       }
-    } catch (error) {
-      setMensaje("Credenciales incorrectas");
+    } catch {
+      setMensaje("Error al conectar con el servidor");
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "50px auto", padding: "20px" }}>
-      <h2>Iniciar sesión - RENATHIA CROCHET</h2>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div style={{ marginBottom: "15px" }}>
-          <label>Correo electrónico</label>
-          <input
-            {...register("email", {
-              required: "El correo es obligatorio",
-              pattern: { value: /^\S+@\S+$/i, message: "Correo no válido" }
-            })}
-            placeholder="tu@correo.com"
-            style={{ width: "100%", padding: "8px" }}
-          />
-          {errors.email && <p style={{ color: "red" }}>{errors.email.message}</p>}
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <div style={styles.logoWrap}>
+          <img src={logo} alt="Renathia Crochet" style={styles.logo} />
+          <h1 style={styles.brand}>Renathia Crochet</h1>
+          <p style={styles.subtitle}>Bienvenida, ingresa a tu cuenta</p>
         </div>
 
-        <div style={{ marginBottom: "15px" }}>
-          <label>Contraseña</label>
-          <div style={{ display: "flex", alignItems: "center" }}>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="form-group">
+            <label>Correo electrónico</label>
             <input
-              type={showPassword ? "text" : "password"}
-              {...register("password", { required: "La contraseña es obligatoria" })}
-              placeholder="Tu contraseña"
-              style={{ width: "100%", padding: "8px" }}
+              {...register("email", {
+                required: "El correo es obligatorio",
+                pattern: { value: /^\S+@\S+$/i, message: "Correo no válido" }
+              })}
+              placeholder="tu@correo.com"
+              type="email"
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={{ marginLeft: "8px", padding: "8px", cursor: "pointer" }}>
-              {showPassword ? "🙈" : "👁️"}
-            </button>
+            {errors.email && <p className="form-error">{errors.email.message}</p>}
           </div>
-          {errors.password && <p style={{ color: "red" }}>{errors.password.message}</p>}
+
+          <div className="form-group">
+            <label>Contraseña</label>
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                {...register("password", { required: "La contraseña es obligatoria" })}
+                placeholder="Tu contraseña"
+                style={{ paddingRight: 44 }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={styles.eyeBtn}
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
+            {errors.password && <p className="form-error">{errors.password.message}</p>}
+          </div>
+
+          {mensaje && <div className="form-message error">{mensaje}</div>}
+
+          <button type="submit" className="btn-primary" style={{ width: "100%", marginTop: 4 }}>
+            Iniciar sesión
+          </button>
+        </form>
+
+        <div style={styles.footer}>
+          <a href="/recuperar-contrasena">¿Olvidaste tu contraseña?</a>
+          <span style={{ color: "var(--gray)", fontSize: 13 }}>
+            ¿No tienes cuenta? <a href="/registro">Regístrate</a>
+          </span>
         </div>
-
-        {mensaje && <p style={{ color: "red" }}>{mensaje}</p>}
-
-        <button type="submit" style={{ width: "100%", padding: "10px", backgroundColor: "#6B2D8B", color: "white", border: "none", cursor: "pointer" }}>
-          Iniciar sesión
-        </button>
-      </form>
-
-      <p style={{ textAlign: "center", marginTop: "15px" }}>
-        <a href="/recuperar-contrasena">¿Olvidaste tu contraseña?</a>
-      </p>
-      <p style={{ textAlign: "center" }}>
-        ¿No tienes cuenta? <a href="/registro">Regístrate</a>
-      </p>
+      </div>
     </div>
   );
 }
+
+const styles = {
+  page: {
+    minHeight: "calc(100vh - 66px)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "linear-gradient(135deg, var(--pink-light) 0%, var(--green-light) 100%)",
+    padding: "20px",
+  },
+  card: {
+    background: "var(--white)",
+    borderRadius: 16,
+    boxShadow: "0 8px 32px rgba(212,132,154,0.18)",
+    padding: "40px 40px 32px",
+    width: "100%",
+    maxWidth: 420,
+  },
+  logoWrap: {
+    textAlign: "center",
+    marginBottom: 28,
+  },
+  logo: {
+    height: 60,
+    objectFit: "contain",
+    marginBottom: 10,
+  },
+  brand: {
+    fontSize: 22,
+    fontWeight: 700,
+    color: "var(--pink-dark)",
+    margin: "0 0 4px",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "var(--gray)",
+    margin: 0,
+  },
+  eyeBtn: {
+    position: "absolute",
+    right: 10,
+    top: "50%",
+    transform: "translateY(-50%)",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    fontSize: 18,
+    padding: 0,
+  },
+  footer: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 20,
+    fontSize: 14,
+  },
+};

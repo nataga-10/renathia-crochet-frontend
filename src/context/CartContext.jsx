@@ -11,6 +11,7 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const [cartOpen, setCartOpen] = useState(false);
 
   // Cargar el carrito cuando el usuario inicia sesion
   useEffect(() => {
@@ -35,12 +36,13 @@ export function CartProvider({ children }) {
   };
 
   // HU-05: Agrega un producto al carrito
-  const agregarAlCarrito = async (productId, quantity = 1, productColorId = null) => {
+  const agregarAlCarrito = async (productId, quantity = 1, productColorId = null, customPrice = null, customizationNotes = null) => {
     try {
       setLoading(true);
-      const data = await addToCart(token, productId, quantity, productColorId);
+      const data = await addToCart(token, productId, quantity, productColorId, customPrice, customizationNotes);
       setCart(data);
-      setMensaje("Producto agregado al carrito");
+      setMensaje("¡Producto agregado al carrito!");
+      setCartOpen(true);
       setTimeout(() => setMensaje(""), 3000);
     } catch (error) {
       setMensaje("Error al agregar el producto");
@@ -97,6 +99,8 @@ export function CartProvider({ children }) {
       cart,
       loading,
       mensaje,
+      cartOpen,
+      setCartOpen,
       agregarAlCarrito,
       actualizarCantidad,
       eliminarDelCarrito,
