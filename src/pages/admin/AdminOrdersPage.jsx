@@ -105,18 +105,20 @@ export default function AdminOrdersPage() {
                   <div style={styles.section}>
                     <p style={styles.sectionTitle}>Productos</p>
                     {order.items.map((item) => (
-                      <div key={item.orderItemId} style={styles.item}>
-                        <span>{item.productName}</span>
-                        <span style={{ color: "var(--gray)" }}>x{item.quantity}</span>
-                        <span>${item.subtotal.toLocaleString("es-CO")}</span>
+                      <div key={item.orderItemId} style={{ marginBottom: 8 }}>
+                        <div style={styles.item}>
+                          <span>{item.productName}</span>
+                          <span style={{ color: "var(--gray)" }}>x{item.quantity}</span>
+                          <span>${item.subtotal.toLocaleString("es-CO")}</span>
+                        </div>
+                        {item.notes && (
+                          <div style={styles.notesBox}>
+                            <span style={styles.notesLabel}>Personalización: </span>
+                            <span style={styles.notesText}>{item.notes}</span>
+                          </div>
+                        )}
                       </div>
                     ))}
-                    {order.notes && (
-                      <div style={styles.notesBox}>
-                        <span style={styles.notesLabel}>Personalización: </span>
-                        <span style={styles.notesText}>{order.notes}</span>
-                      </div>
-                    )}
                   </div>
 
                   <div style={styles.section}>
