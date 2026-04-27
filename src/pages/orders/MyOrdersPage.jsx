@@ -74,9 +74,17 @@ export default function MyOrdersPage() {
           {/* Productos del pedido */}
           <div style={{ marginBottom: "15px" }}>
             {order.items.map(item => (
-              <div key={item.orderItemId} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
-                <span>{item.productName} x{item.quantity}</span>
-                <span>${item.subtotal.toLocaleString()}</span>
+              <div key={item.orderItemId} style={{ padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span>{item.productName} x{item.quantity}</span>
+                  <span>${item.subtotal.toLocaleString()}</span>
+                </div>
+                {item.notes && (
+                  <div style={{ marginTop: "4px", padding: "5px 10px", background: "#FFF0F5", borderRadius: "6px", fontSize: "12px" }}>
+                    <strong style={{ color: "#A0004A" }}>Personalización: </strong>
+                    <span style={{ color: "#444" }}>{item.notes}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
