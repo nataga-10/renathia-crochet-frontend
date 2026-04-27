@@ -46,9 +46,14 @@ export default function Navbar() {
 
           {/* Admin y Seller */}
           {(user?.roleId === 1 || user?.roleId === 3) && (
-            <NavLink href="/admin/productos" active={isActive("/admin/productos")}>
-              Gestión de productos
-            </NavLink>
+            <>
+              <NavLink href="/admin/productos" active={isActive("/admin/productos")}>
+                Gestión de productos
+              </NavLink>
+              <NavLink href="/admin/pedidos" active={isActive("/admin/pedidos")}>
+                Pedidos
+              </NavLink>
+            </>
           )}
         </div>
 

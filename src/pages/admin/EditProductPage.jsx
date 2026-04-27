@@ -3,9 +3,11 @@ import { getProductById, updateProduct, setProductParts } from "../../services/p
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import PartsEditor from "../../components/admin/PartsEditor";
+import { useAuth } from "../../context/AuthContext";
 
 export default function EditProductPage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
   const navigate = useNavigate();
   const [mensaje, setMensaje] = useState("");
@@ -106,19 +108,21 @@ export default function EditProductPage() {
               />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              <div className="form-group">
-                <label>Precio (COP)</label>
-                <input
-                  type="number"
-                  {...register("basePrice", {
-                    required: "El precio es obligatorio",
-                    min: { value: 1, message: "Debe ser mayor a 0" }
-                  })}
-                  placeholder="Ej: 45000"
-                />
-                {errors.basePrice && <p className="form-error">{errors.basePrice.message}</p>}
-              </div>
+            <div style={{ display: "grid", gridTemplateColumns: user?.roleId === 3 ? "1fr" : "1fr 1fr", gap: 16 }}>
+              {user?.roleId !== 3 && (
+                <div className="form-group">
+                  <label>Precio (COP)</label>
+                  <input
+                    type="number"
+                    {...register("basePrice", {
+                      required: "El precio es obligatorio",
+                      min: { value: 1, message: "Debe ser mayor a 0" }
+                    })}
+                    placeholder="Ej: 45000"
+                  />
+                  {errors.basePrice && <p className="form-error">{errors.basePrice.message}</p>}
+                </div>
+              )}
 
               <div className="form-group">
                 <label>Stock</label>

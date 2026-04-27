@@ -13,6 +13,14 @@ export const getMyOrders = async (token) => {
   return response.data;
 };
 
+// Admin y Seller: obtiene todos los pedidos confirmados
+export const getAllOrders = async (token) => {
+  const response = await axios.get(`${API_URL}/Orders/all`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
 // Obtiene el detalle de un pedido especifico con su tracking
 export const getOrderById = async (token, orderId) => {
   const response = await axios.get(`${API_URL}/Orders/${orderId}`, authHeader(token));

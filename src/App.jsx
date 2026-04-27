@@ -15,6 +15,7 @@ import CartPage from "./pages/cart/CartPage";
 import MyOrdersPage from "./pages/orders/MyOrdersPage";
 import OrderDetailPage from "./pages/orders/OrderDetailPage";
 import ProfilePage from "./pages/auth/ProfilePage";
+import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 
 function Layout({ children }) {
   return (
@@ -58,6 +59,9 @@ function App() {
               } />
 
               {/* Solo administrador (1) y vendedor (3) */}
+              <Route path="/admin/pedidos" element={
+                <ProtectedRoute allowedRoles={[1, 3]}><AdminOrdersPage /></ProtectedRoute>
+              } />
               <Route path="/admin/productos" element={
                 <ProtectedRoute allowedRoles={[1, 3]}><ProductsAdminPage /></ProtectedRoute>
               } />
