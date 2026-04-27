@@ -3,7 +3,6 @@ import { getProducts, getProductsByCategory } from "../../services/productServic
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import PersonalizacionModal from "../../components/common/PersonalizacionModal";
 
 const CATEGORIAS = [
   { id: null, label: "Todos" },
@@ -16,8 +15,7 @@ export default function CatalogPage() {
   const [products, setProducts] = useState([]);
   const [mensaje, setMensaje] = useState("");
   const [categoriaActiva, setCategoriaActiva] = useState(null);
-  const [productoModal, setProductoModal] = useState(null); // amigurumi abierto en modal
-  const { agregarAlCarrito, loading } = useCart();
+  const { loading } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -46,21 +44,6 @@ export default function CatalogPage() {
   };
 
   const tienePartes = (product) => product.parts && product.parts.length > 0;
-
-  const handleAddToCart = (product) => {
-    if (!user) { navigate("/login"); return; }
-    if (user.roleId !== 2) return;
-    if (tienePartes(product)) {
-      setProductoModal(product);
-    } else {
-      agregarAlCarrito(product.productId, 1);
-    }
-  };
-
-  const handlePersonalizacionConfirm = (customPrice, notes) => {
-    agregarAlCarrito(productoModal.productId, 1, null, customPrice, notes);
-    setProductoModal(null);
-  };
 
   return (
     <div className="page">
@@ -126,37 +109,19 @@ export default function CatalogPage() {
                   <span style={styles.priceHidden}>Inicia sesión para ver el precio</span>
                 )}
 
-                {user?.roleId === 2 && (
-                  <button
-                    onClick={() => handleAddToCart(product)}
-                    disabled={loading}
-                    style={styles.addBtn}
-                  >
-                    {tienePartes(product) ? "🎨 Personalizar" : "Agregar"}
-                  </button>
-                )}
-                {!user && (
-                  <button
-                    onClick={() => navigate("/login")}
-                    style={styles.loginBtn}
-                  >
-                    Inicia sesión
-                  </button>
-                )}
+                <button
+                  onClick={() => navigate(`/producto/${product.productId}`)}
+                  disabled={loading}
+                  style={styles.addBtn}
+                >
+                  {tienePartes(product) ? "🎨 Personalizar" : "Ver producto"}
+                </button>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Modal personalización amigurumi */}
-      {productoModal && (
-        <PersonalizacionModal
-          product={productoModal}
-          onConfirm={handlePersonalizacionConfirm}
-          onClose={() => setProductoModal(null)}
-        />
-      )}
     </div>
   );
 }
