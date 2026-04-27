@@ -1,8 +1,6 @@
 import { useCart } from "../../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { getProductById } from "../../services/productService";
-import PersonalizacionModal from "../../components/common/PersonalizacionModal";
 
 export default function CartPage() {
   const { cart, loading, mensaje, actualizarCantidad, eliminarDelCarrito, finalizarCompra } = useCart();
@@ -10,27 +8,10 @@ export default function CartPage() {
   const [deliveryMethod, setDeliveryMethod] = useState("Shipping");
   const [notes, setNotes] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
-  const [editItem, setEditItem] = useState(null);       // item del carrito en edición
-  const [editProduct, setEditProduct] = useState(null); // datos completos del producto
-  const [loadingEdit, setLoadingEdit] = useState(false);
 
-  const handleEditPersonalizacion = async (item) => {
-    setLoadingEdit(true);
-    try {
-      const product = await getProductById(item.productId);
-      if (!product.parts || product.parts.length === 0) return;
-      setEditItem(item);
-      setEditProduct(product);
-    } finally {
-      setLoadingEdit(false);
-    }
-  };
-
-  const handleEditConfirm = async (customPrice, customNotes) => {
-    await eliminarDelCarrito(editItem.orderItemId);
-    await agregarAlCarrito(editItem.productId, editItem.quantity, null, customPrice, customNotes);
-    setEditItem(null);
-    setEditProduct(null);
+  const handleEditar = async (item) => {
+    await eliminarDelCarrito(item.orderItemId);
+    navigate(`/producto/${item.productId}`);
   };
 
   const handleCheckout = async () => {
@@ -117,8 +98,8 @@ export default function CartPage() {
             {/* Botones acción */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <button
-                onClick={() => handleEditPersonalizacion(item)}
-                disabled={loadingEdit}
+                onClick={() => handleEditar(item)}
+                disabled={loading}
                 style={{ backgroundColor: "var(--pink)", color: "white", border: "none", padding: "6px 12px", cursor: "pointer", borderRadius: "4px", fontSize: 13, whiteSpace: "nowrap" }}>
                 🎨 Editar
               </button>
@@ -191,14 +172,6 @@ export default function CartPage() {
         </button>
       </div>
 
-      {/* Modal de edición de personalización */}
-      {editProduct && (
-        <PersonalizacionModal
-          product={editProduct}
-          onConfirm={handleEditConfirm}
-          onClose={() => { setEditItem(null); setEditProduct(null); }}
-        />
-      )}
     </div>
   );
 }
