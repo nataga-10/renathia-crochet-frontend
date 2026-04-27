@@ -15,7 +15,7 @@ export const getMyOrders = async (token) => {
 
 // Admin y Seller: obtiene todos los pedidos confirmados
 export const getAllOrders = async (token) => {
-  const response = await axios.get(`${API_URL}/Orders/all`, {
+  const response = await axios.get(`${API_URL}/Orders/admin/all`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return response.data;
