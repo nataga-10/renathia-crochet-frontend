@@ -9,9 +9,10 @@ export default function CartPage() {
   const [notes, setNotes] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
 
-  const handleEditar = async (item) => {
-    await eliminarDelCarrito(item.orderItemId);
-    navigate(`/producto/${item.productId}`);
+  const handleEditar = (item) => {
+    navigate(`/producto/${item.productId}`, {
+      state: { orderItemId: item.orderItemId }
+    });
   };
 
   const handleCheckout = async () => {

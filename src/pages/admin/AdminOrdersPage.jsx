@@ -111,6 +111,12 @@ export default function AdminOrdersPage() {
                         <span>${item.subtotal.toLocaleString("es-CO")}</span>
                       </div>
                     ))}
+                    {order.notes && (
+                      <div style={styles.notesBox}>
+                        <span style={styles.notesLabel}>Personalización: </span>
+                        <span style={styles.notesText}>{order.notes}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div style={styles.section}>
@@ -206,6 +212,20 @@ const styles = {
     display: "flex",
     gap: 10,
     alignItems: "flex-start",
+  },
+  notesBox: {
+    marginTop: 8,
+    padding: "8px 12px",
+    background: "var(--pink-light)",
+    borderRadius: 8,
+    fontSize: 13,
+  },
+  notesLabel: {
+    fontWeight: 600,
+    color: "var(--pink-dark)",
+  },
+  notesText: {
+    color: "var(--gray-dark)",
   },
   trackDot: {
     width: 8,

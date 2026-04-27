@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { getProductById } from "../../services/productService";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
@@ -14,8 +14,10 @@ const PRECIOS_EXTRA = {
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const editingOrderItemId = location.state?.orderItemId ?? null;
   const { user } = useAuth();
-  const { agregarAlCarrito, loading } = useCart();
+  const { agregarAlCarrito, eliminarDelCarrito, loading } = useCart();
 
   const [product, setProduct] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -99,6 +101,9 @@ export default function ProductDetailPage() {
 
     const customPrice = extrasPrice > 0 ? totalPrice : null;
     const notes = buildNotes();
+    if (editingOrderItemId) {
+      await eliminarDelCarrito(editingOrderItemId);
+    }
     agregarAlCarrito(product.productId, 1, null, customPrice, notes);
     setAgregado(true);
     setTimeout(() => setAgregado(false), 2500);
