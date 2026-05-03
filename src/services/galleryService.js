@@ -7,6 +7,13 @@ const authHeader = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+export const getPendingGallery = async () => {
+  const response = await axios.get(`${API_URL}/gallery/pending`, {
+    headers: authHeader()
+  });
+  return response.data;
+};
+
 export const getApprovedGallery = async () => {
   const response = await axios.get(`${API_URL}/gallery`);
   return response.data;

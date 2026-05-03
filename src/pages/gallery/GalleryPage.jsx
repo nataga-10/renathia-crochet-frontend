@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { getApprovedGallery, uploadGalleryPhoto, deleteGalleryPhoto } from "../../services/galleryService";
+import { getApprovedGallery, getPendingGallery, uploadGalleryPhoto, approveGalleryPhoto, deleteGalleryPhoto } from "../../services/galleryService";
 
 export default function GalleryPage() {
   const { user } = useAuth();
@@ -12,8 +12,10 @@ export default function GalleryPage() {
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [uploadError, setUploadError] = useState("");
+  const [pending, setPending] = useState([]);
 
   useEffect(() => { loadPhotos(); }, []);
+  useEffect(() => { if (user?.roleId === 1) loadPending(); }, [user]);
 
   const loadPhotos = async () => {
     try {
@@ -21,6 +23,35 @@ export default function GalleryPage() {
       setPhotos(Array.isArray(data) ? data : []);
     } catch {
       setMensaje("Error al cargar la galería");
+    }
+  };
+
+  const loadPending = async () => {
+    try {
+      const data = await getPendingGallery();
+      setPending(Array.isArray(data) ? data : []);
+    } catch {
+      // sin acceso o error — ignorar silenciosamente
+    }
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      await approveGalleryPhoto(id);
+      setPending(prev => prev.filter(p => p.galleryId !== id));
+      loadPhotos();
+    } catch {
+      alert("No se pudo aprobar la foto.");
+    }
+  };
+
+  const handleReject = async (id) => {
+    if (!window.confirm("¿Rechazar y eliminar esta foto?")) return;
+    try {
+      await deleteGalleryPhoto(id);
+      setPending(prev => prev.filter(p => p.galleryId !== id));
+    } catch {
+      alert("No se pudo eliminar la foto.");
     }
   };
 
@@ -121,6 +152,45 @@ export default function GalleryPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Sección pendientes — solo Admin */}
+      {user?.roleId === 1 && (
+        <div style={styles.pendingSection}>
+          <h3 style={styles.pendingTitle}>
+            Fotos pendientes de aprobación
+            {pending.length > 0 && (
+              <span style={styles.pendingBadge}>{pending.length}</span>
+            )}
+          </h3>
+          {pending.length === 0 ? (
+            <p style={{ color: "var(--gray)", fontSize: 14 }}>No hay fotos pendientes.</p>
+          ) : (
+            <div style={styles.grid}>
+              {pending.map(photo => (
+                <div key={photo.galleryId} style={styles.card}>
+                  <img src={photo.imageUrl} alt={photo.caption || "Foto pendiente"} style={styles.img} />
+                  <div style={styles.cardBody}>
+                    {photo.caption && (
+                      <p style={styles.caption}>{photo.caption}</p>
+                    )}
+                    <div style={styles.cardFooter}>
+                      <span style={styles.userName}>{photo.userName || "Cliente"}</span>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button style={styles.approveBtn} onClick={() => handleApprove(photo.galleryId)}>
+                          Aprobar
+                        </button>
+                        <button style={styles.rejectBtn} onClick={() => handleReject(photo.galleryId)}>
+                          Rechazar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -249,6 +319,49 @@ const styles = {
     padding: "4px 10px",
     fontSize: 12,
     color: "var(--gray)",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  },
+  pendingSection: {
+    marginTop: 48,
+    paddingTop: 32,
+    borderTop: "2px solid var(--pink-light)",
+  },
+  pendingTitle: {
+    margin: "0 0 20px",
+    fontSize: 17,
+    fontWeight: 700,
+    color: "var(--gray-dark)",
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+  },
+  pendingBadge: {
+    background: "var(--pink)",
+    color: "white",
+    borderRadius: 20,
+    padding: "1px 9px",
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  approveBtn: {
+    background: "var(--green, #38a169)",
+    color: "white",
+    border: "none",
+    borderRadius: 6,
+    padding: "4px 10px",
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: "pointer",
+    fontFamily: "inherit",
+  },
+  rejectBtn: {
+    background: "transparent",
+    border: "1.5px solid #e53e3e",
+    borderRadius: 6,
+    padding: "4px 10px",
+    fontSize: 12,
+    color: "#e53e3e",
     cursor: "pointer",
     fontFamily: "inherit",
   },
