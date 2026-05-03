@@ -102,6 +102,24 @@ export default function AdminOrdersPage() {
               {/* Detalle expandible */}
               {expanded === order.orderId && (
                 <div style={styles.orderBody}>
+                  {/* Cliente + Entrega */}
+                  <div style={styles.infoRow}>
+                    <div style={styles.infoBlock}>
+                      <p style={styles.sectionTitle}>Cliente</p>
+                      <p style={styles.infoText}>{order.clientName ?? "—"}</p>
+                      <p style={styles.infoSubText}>{order.clientEmail ?? "—"}</p>
+                    </div>
+                    <div style={styles.infoBlock}>
+                      <p style={styles.sectionTitle}>Entrega</p>
+                      <p style={styles.infoText}>
+                        {order.deliveryMethod === "Shipping" ? "Envío a domicilio" : "Recojo en tienda"}
+                      </p>
+                      {order.notes && (
+                        <p style={styles.infoSubText}>{order.notes}</p>
+                      )}
+                    </div>
+                  </div>
+
                   <div style={styles.section}>
                     <p style={styles.sectionTitle}>Productos</p>
                     {order.items.map((item) => (
@@ -244,5 +262,31 @@ const styles = {
     color: "var(--gray-dark)",
     borderTop: "1px solid var(--border)",
     paddingTop: 12,
+  },
+  infoRow: {
+    display: "flex",
+    gap: 24,
+    flexWrap: "wrap",
+    padding: "12px 16px",
+    background: "var(--pink-light)",
+    borderRadius: 10,
+  },
+  infoBlock: {
+    flex: 1,
+    minWidth: 160,
+    display: "flex",
+    flexDirection: "column",
+    gap: 2,
+  },
+  infoText: {
+    margin: 0,
+    fontSize: 14,
+    fontWeight: 600,
+    color: "var(--gray-dark)",
+  },
+  infoSubText: {
+    margin: 0,
+    fontSize: 13,
+    color: "var(--gray)",
   },
 };
