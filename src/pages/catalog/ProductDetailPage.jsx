@@ -83,7 +83,7 @@ export default function ProductDetailPage() {
     return partes.length > 1 ? partes.join(" + ") : null;
   };
 
-  const handleAgregar = () => {
+  const handleAgregar = async () => {
     if (!user) { navigate("/login"); return; }
     if (user.roleId !== 2) return;
 
