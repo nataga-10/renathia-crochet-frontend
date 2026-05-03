@@ -38,6 +38,7 @@ export default function AdminOrdersPage() {
     try {
       const data = await getAllOrders(token);
       setOrders(Array.isArray(data) ? data : []);
+      console.log("Pedidos:", data);
     } catch {
       setError("Error al cargar los pedidos.");
     } finally {
