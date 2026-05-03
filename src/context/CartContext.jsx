@@ -80,10 +80,10 @@ export function CartProvider({ children }) {
   };
 
   // HU-08: Finaliza la compra
-  const finalizarCompra = async (deliveryMethod, notes) => {
+  const finalizarCompra = async (deliveryMethod, notes, shippingAddress = "") => {
     try {
       setLoading(true);
-      const order = await checkout(token, deliveryMethod, notes);
+      const order = await checkout(token, deliveryMethod, notes, shippingAddress);
       setCart(null); // Limpiar carrito despues de comprar
       return order;
     } catch (error) {

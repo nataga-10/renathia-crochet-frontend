@@ -6,7 +6,12 @@ export default function CartPage() {
   const { cart, loading, mensaje, actualizarCantidad, eliminarDelCarrito, finalizarCompra } = useCart();
   const navigate = useNavigate();
   const [deliveryMethod, setDeliveryMethod] = useState("Shipping");
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [addressError, setAddressError] = useState(false);
   const [notes, setNotes] = useState("");
+  const [isGift, setIsGift] = useState(false);
+  const [recipientName, setRecipientName] = useState("");
+  const [giftMessage, setGiftMessage] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
 
   const handleEditar = (item) => {
@@ -16,9 +21,28 @@ export default function CartPage() {
   };
 
   const handleCheckout = async () => {
+    if (deliveryMethod === "Shipping" && !shippingAddress.trim()) {
+      setAddressError(true);
+      return;
+    }
+    setAddressError(false);
+
+    // Construir notas finales: texto libre + datos de regalo si aplica
+    let finalNotes = notes.trim();
+    if (isGift) {
+      const giftParts = [];
+      if (recipientName.trim()) giftParts.push(`Para: ${recipientName.trim()}`);
+      if (giftMessage.trim()) giftParts.push(`Dedicatoria: "${giftMessage.trim()}"`);
+      if (giftParts.length > 0) {
+        finalNotes = finalNotes
+          ? `${finalNotes} | ${giftParts.join(" | ")}`
+          : giftParts.join(" | ");
+      }
+    }
+
     try {
       setCheckingOut(true);
-      const order = await finalizarCompra(deliveryMethod, notes);
+      const order = await finalizarCompra(deliveryMethod, finalNotes, shippingAddress.trim());
       navigate(`/mis-pedidos/${order.orderId}`);
     } catch (error) {
       console.error("Error al finalizar compra:", error);
@@ -133,29 +157,104 @@ export default function CartPage() {
 
       {/* Metodo de entrega */}
       <div style={{ backgroundColor: "#f0f4ff", padding: "20px", borderRadius: "8px", marginBottom: "20px" }}>
-        <h3 style={{ marginTop: 0 }}>Metodo de entrega</h3>
+        <h3 style={{ marginTop: 0 }}>Método de entrega</h3>
         <div style={{ display: "flex", gap: "20px", marginBottom: "15px" }}>
           <label style={{ cursor: "pointer" }}>
             <input type="radio" value="Shipping" checked={deliveryMethod === "Shipping"}
-              onChange={(e) => setDeliveryMethod(e.target.value)} />
-            {" "} Envio a domicilio
+              onChange={(e) => { setDeliveryMethod(e.target.value); setAddressError(false); }} />
+            {" "} Envío a domicilio
           </label>
           <label style={{ cursor: "pointer" }}>
             <input type="radio" value="Pickup" checked={deliveryMethod === "Pickup"}
-              onChange={(e) => setDeliveryMethod(e.target.value)} />
+              onChange={(e) => { setDeliveryMethod(e.target.value); setAddressError(false); }} />
             {" "} Recojo en tienda
           </label>
         </div>
 
+        {/* Dirección — solo si elige envío */}
+        {deliveryMethod === "Shipping" && (
+          <div style={{ marginBottom: "15px" }}>
+            <label style={{ display: "block", marginBottom: "6px", fontWeight: "600" }}>
+              Dirección de entrega *
+            </label>
+            <input
+              type="text"
+              value={shippingAddress}
+              onChange={(e) => { setShippingAddress(e.target.value); setAddressError(false); }}
+              placeholder="Ej: Calle 12 #34-56, Bogotá, Cundinamarca"
+              style={{
+                width: "100%", padding: "8px 10px", borderRadius: "4px",
+                border: addressError ? "1.5px solid #e53e3e" : "1px solid #ddd",
+                boxSizing: "border-box"
+              }}
+            />
+            {addressError && (
+              <p style={{ color: "#e53e3e", fontSize: "13px", margin: "4px 0 0" }}>
+                La dirección de entrega es obligatoria.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Punto de recogida — solo si elige Pickup */}
+        {deliveryMethod === "Pickup" && (
+          <div style={{ backgroundColor: "#e8f5ee", borderRadius: "6px", padding: "12px 14px", marginBottom: "15px", fontSize: "14px", color: "#1A7A4A" }}>
+            <strong>Punto de entrega:</strong> Mosquera, Cundinamarca — coordinamos punto de entrega por WhatsApp.
+          </div>
+        )}
+
         <div>
-          <label>Notas adicionales (opcional)</label>
+          <label style={{ display: "block", marginBottom: "6px" }}>Notas adicionales (opcional)</label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Ej: color especifico, dedicatoria, instrucciones de entrega..."
-            style={{ width: "100%", padding: "8px", marginTop: "8px", height: "80px", borderRadius: "4px", border: "1px solid #ddd" }}
+            placeholder="Ej: instrucciones de entrega, referencias del lugar..."
+            style={{ width: "100%", padding: "8px", marginTop: "4px", height: "70px", borderRadius: "4px", border: "1px solid #ddd", boxSizing: "border-box" }}
           />
         </div>
+      </div>
+
+      {/* ¿Para mí o para regalo? */}
+      <div style={{ backgroundColor: "#fff8f0", padding: "20px", borderRadius: "8px", marginBottom: "20px" }}>
+        <h3 style={{ marginTop: 0 }}>¿Para quién es el pedido?</h3>
+        <div style={{ display: "flex", gap: "20px", marginBottom: "15px" }}>
+          <label style={{ cursor: "pointer" }}>
+            <input type="radio" checked={!isGift} onChange={() => setIsGift(false)} />
+            {" "} Es para mí
+          </label>
+          <label style={{ cursor: "pointer" }}>
+            <input type="radio" checked={isGift} onChange={() => setIsGift(true)} />
+            {" "} Es un regalo 🎁
+          </label>
+        </div>
+
+        {isGift && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div>
+              <label style={{ display: "block", marginBottom: "6px", fontWeight: "600" }}>
+                Nombre del destinatario
+              </label>
+              <input
+                type="text"
+                value={recipientName}
+                onChange={(e) => setRecipientName(e.target.value)}
+                placeholder="Ej: María García"
+                style={{ width: "100%", padding: "8px 10px", borderRadius: "4px", border: "1px solid #ddd", boxSizing: "border-box" }}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", marginBottom: "6px", fontWeight: "600" }}>
+                Mensaje de dedicatoria (opcional)
+              </label>
+              <textarea
+                value={giftMessage}
+                onChange={(e) => setGiftMessage(e.target.value)}
+                placeholder='Ej: "Feliz cumpleaños, con mucho cariño"'
+                style={{ width: "100%", padding: "8px", height: "70px", borderRadius: "4px", border: "1px solid #ddd", boxSizing: "border-box" }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Botones de accion */}

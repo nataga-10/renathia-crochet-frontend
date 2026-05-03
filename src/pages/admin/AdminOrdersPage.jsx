@@ -115,6 +115,9 @@ export default function AdminOrdersPage() {
                       <p style={styles.infoText}>
                         {order.deliveryMethod === "Shipping" ? "Envío a domicilio" : "Recojo en tienda"}
                       </p>
+                      {order.deliveryMethod === "Shipping" && order.shippingAddress && (
+                        <p style={styles.infoSubText}>📍 {order.shippingAddress}</p>
+                      )}
                       {order.notes && (
                         <p style={styles.infoSubText}>{order.notes}</p>
                       )}

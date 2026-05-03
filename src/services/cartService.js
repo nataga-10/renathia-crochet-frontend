@@ -47,10 +47,10 @@ export const removeFromCart = async (token, orderItemId) => {
 
 // HU-08: Finaliza la compra
 // deliveryMethod: "Shipping" o "Pickup"
-export const checkout = async (token, deliveryMethod, notes = "") => {
+export const checkout = async (token, deliveryMethod, notes = "", shippingAddress = "") => {
   const response = await axios.post(
     `${API_URL}/Cart/checkout`,
-    { deliveryMethod, notes },
+    { deliveryMethod, notes, shippingAddress },
     authHeader(token)
   );
   return response.data;
