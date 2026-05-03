@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { getAllOrders } from "../../services/orderService";
+import { getAllOrders, updateOrderStatus } from "../../services/orderService";
 
 const STATUS_LABELS = {
   PendingPayment:  "Pendiente de pago",
@@ -11,7 +11,19 @@ const STATUS_LABELS = {
   Delivered:       "Entregado",
   ReadyForPickup:  "Listo para recoger",
   PickedUp:        "Recogido",
+  Cancelled:       "Cancelado",
 };
+
+const VALID_STATUSES = [
+  { value: "PaymentReceived", label: "Pago recibido" },
+  { value: "InProduction",    label: "En elaboración artesanal" },
+  { value: "QualityControl",  label: "Control de calidad" },
+  { value: "ReadyForPickup",  label: "Listo para recoger" },
+  { value: "Shipped",         label: "Enviado" },
+  { value: "Delivered",       label: "Entregado" },
+  { value: "PickedUp",        label: "Recogido" },
+  { value: "Cancelled",       label: "Cancelado" },
+];
 
 const STATUS_COLORS = {
   PaymentReceived: "#f59e0b",
@@ -21,6 +33,7 @@ const STATUS_COLORS = {
   Delivered:       "#10b981",
   ReadyForPickup:  "#f97316",
   PickedUp:        "#10b981",
+  Cancelled:       "#6b7280",
 };
 
 export default function AdminOrdersPage() {
@@ -29,6 +42,8 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState(null);
+  const [statusDraft, setStatusDraft] = useState({});   // { [orderId]: { status, notes } }
+  const [updating, setUpdating] = useState(null);        // orderId en proceso
 
   useEffect(() => {
     loadOrders();
@@ -43,6 +58,21 @@ export default function AdminOrdersPage() {
       setError("Error al cargar los pedidos.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (orderId) => {
+    const draft = statusDraft[orderId];
+    if (!draft?.status) return;
+    setUpdating(orderId);
+    try {
+      await updateOrderStatus(token, orderId, draft.status, draft.notes ?? "");
+      await loadOrders();
+      setStatusDraft(prev => ({ ...prev, [orderId]: {} }));
+    } catch {
+      setError("Error al actualizar el estado.");
+    } finally {
+      setUpdating(null);
     }
   };
 
@@ -157,6 +187,42 @@ export default function AdminOrdersPage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Cambiar estado — HU-11 */}
+                  <div style={styles.statusSection}>
+                    <p style={styles.sectionTitle}>Cambiar estado del pedido</p>
+                    <div style={styles.statusRow}>
+                      <select
+                        value={statusDraft[order.orderId]?.status ?? order.status}
+                        onChange={e => setStatusDraft(prev => ({
+                          ...prev,
+                          [order.orderId]: { ...prev[order.orderId], status: e.target.value }
+                        }))}
+                        style={styles.statusSelect}
+                      >
+                        {VALID_STATUSES.map(s => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Nota interna (opcional)"
+                        value={statusDraft[order.orderId]?.notes ?? ""}
+                        onChange={e => setStatusDraft(prev => ({
+                          ...prev,
+                          [order.orderId]: { ...prev[order.orderId], notes: e.target.value }
+                        }))}
+                        style={styles.statusNoteInput}
+                      />
+                      <button
+                        onClick={() => handleUpdateStatus(order.orderId)}
+                        disabled={updating === order.orderId}
+                        style={styles.statusBtn}
+                      >
+                        {updating === order.orderId ? "Guardando..." : "Actualizar estado"}
+                      </button>
+                    </div>
                   </div>
 
                   <div style={styles.totalsRow}>
@@ -292,5 +358,51 @@ const styles = {
     margin: 0,
     fontSize: 13,
     color: "var(--gray)",
+  },
+  statusSection: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+    padding: "14px 16px",
+    background: "#f8f4ff",
+    borderRadius: 10,
+    border: "1.5px solid #e2d9f3",
+  },
+  statusRow: {
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+    alignItems: "center",
+  },
+  statusSelect: {
+    padding: "8px 10px",
+    borderRadius: 8,
+    border: "1.5px solid var(--border)",
+    fontSize: 13,
+    fontFamily: "inherit",
+    background: "var(--white)",
+    cursor: "pointer",
+    flex: "0 0 auto",
+  },
+  statusNoteInput: {
+    padding: "8px 10px",
+    borderRadius: 8,
+    border: "1.5px solid var(--border)",
+    fontSize: 13,
+    fontFamily: "inherit",
+    flex: 1,
+    minWidth: 160,
+  },
+  statusBtn: {
+    background: "var(--pink-dark, #c0386a)",
+    color: "white",
+    border: "none",
+    borderRadius: 8,
+    padding: "8px 16px",
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    flexShrink: 0,
   },
 };

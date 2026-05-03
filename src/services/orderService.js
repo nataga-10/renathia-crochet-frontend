@@ -26,3 +26,13 @@ export const getOrderById = async (token, orderId) => {
   const response = await axios.get(`${API_URL}/Orders/${orderId}`, authHeader(token));
   return response.data;
 };
+
+// HU-11: Admin/Seller cambia el estado de un pedido
+export const updateOrderStatus = async (token, orderId, status, notes = "") => {
+  const response = await axios.put(
+    `${API_URL}/Orders/${orderId}/status`,
+    { status, notes },
+    authHeader(token)
+  );
+  return response.data;
+};
