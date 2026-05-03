@@ -35,6 +35,7 @@ export default function Navbar() {
         <div style={styles.links}>
           {/* Siempre visible */}
           <NavLink href="/catalogo" active={isActive("/catalogo")}>Catálogo</NavLink>
+          <NavLink href="/galeria" active={isActive("/galeria")}>Galería</NavLink>
 
           {/* Solo clientes */}
           {user?.roleId === 2 && (

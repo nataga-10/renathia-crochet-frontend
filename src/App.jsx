@@ -17,6 +17,7 @@ import OrderDetailPage from "./pages/orders/OrderDetailPage";
 import ProfilePage from "./pages/auth/ProfilePage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import ProductDetailPage from "./pages/catalog/ProductDetailPage";
+import GalleryPage from "./pages/gallery/GalleryPage";
 
 function Layout({ children }) {
   return (
@@ -43,6 +44,7 @@ function App() {
               {/* Catálogo público */}
               <Route path="/catalogo" element={<CatalogPage />} />
               <Route path="/producto/:id" element={<ProductDetailPage />} />
+              <Route path="/galeria" element={<GalleryPage />} />
 
               {/* Perfil — cualquier usuario autenticado */}
               <Route path="/perfil" element={
