@@ -22,9 +22,6 @@ export default function PagoWompiPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const containerRef = useRef(null);
-  // Evita que el script se inserte dos veces en React Strict Mode (desarrollo).
-  // En produccion el effect corre una sola vez, este ref no tiene efecto.
-  const scriptInsertedRef = useRef(false);
 
   // Los datos de Wompi vienen de CartPage via navigate state.
   // Si location.state es null (ej: ProtectedRoute hizo un redirect intermedio),
@@ -44,10 +41,6 @@ export default function PagoWompiPage() {
       navigate("/carrito", { replace: true });
       return;
     }
-
-    // Si el script ya fue insertado en esta instancia (Strict Mode corre el effect
-    // dos veces en dev), no repetir. En produccion este bloque nunca se ejecuta.
-    if (scriptInsertedRef.current) return;
 
     // Limpiar sessionStorage ahora que ya tenemos los datos en memoria
     sessionStorage.removeItem("wompiCheckout");
@@ -86,7 +79,6 @@ export default function PagoWompiPage() {
 
     container.innerHTML = "";
     container.appendChild(script);
-    scriptInsertedRef.current = true;
 
     // Cleanup: se llama cuando el componente se desmonta (navegacion hacia otra pagina)
     // No reseteamos scriptInsertedRef aqui: si React Strict Mode llama cleanup+setup
