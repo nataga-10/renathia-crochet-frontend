@@ -18,6 +18,8 @@ import ProfilePage from "./pages/auth/ProfilePage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import ProductDetailPage from "./pages/catalog/ProductDetailPage";
 import GalleryPage from "./pages/gallery/GalleryPage";
+import PagoWompiPage from "./pages/payment/PagoWompiPage";
+import ResultadoPagoPage from "./pages/payment/ResultadoPagoPage";
 
 function Layout({ children }) {
   return (
@@ -55,6 +57,11 @@ function App() {
               <Route path="/carrito" element={
                 <ProtectedRoute allowedRoles={[2]}><CartPage /></ProtectedRoute>
               } />
+              <Route path="/pago" element={
+                <ProtectedRoute allowedRoles={[2]}><PagoWompiPage /></ProtectedRoute>
+              } />
+              {/* /resultado-pago es publico porque Wompi redirige aqui sin JWT */}
+              <Route path="/resultado-pago" element={<ResultadoPagoPage />} />
               <Route path="/mis-pedidos" element={
                 <ProtectedRoute allowedRoles={[2]}><MyOrdersPage /></ProtectedRoute>
               } />

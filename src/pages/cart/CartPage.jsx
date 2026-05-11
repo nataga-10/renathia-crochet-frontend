@@ -42,10 +42,12 @@ export default function CartPage() {
 
     try {
       setCheckingOut(true);
-      const order = await finalizarCompra(deliveryMethod, finalNotes, shippingAddress.trim());
-      navigate(`/mis-pedidos/${order.orderId}`);
+      // El backend guarda la info de entrega y retorna los datos para el widget de Wompi
+      const wompiData = await finalizarCompra(deliveryMethod, finalNotes, shippingAddress.trim());
+      // Navegar a la pagina de pago pasando los datos de Wompi como estado del router
+      navigate("/pago", { state: { wompiData } });
     } catch (error) {
-      console.error("Error al finalizar compra:", error);
+      console.error("Error al preparar el pago:", error);
     } finally {
       setCheckingOut(false);
     }
@@ -268,7 +270,7 @@ export default function CartPage() {
           onClick={handleCheckout}
           disabled={checkingOut}
           style={{ padding: "12px 32px", backgroundColor: "#6B2D8B", color: "white", border: "none", cursor: "pointer", borderRadius: "5px", fontWeight: "bold", fontSize: "16px" }}>
-          {checkingOut ? "Procesando..." : "Finalizar compra"}
+          {checkingOut ? "Preparando pago..." : "Ir a pagar con Wompi"}
         </button>
       </div>
 

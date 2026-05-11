@@ -79,20 +79,27 @@ export function CartProvider({ children }) {
     }
   };
 
-  // HU-08: Finaliza la compra
+  // HU-08: Prepara el pedido para el pago con Wompi.
+  // Ya NO limpia el carrito aqui porque el pago aun no ocurrio.
+  // El carrito se limpia cuando el webhook de Wompi confirma el pago
+  // y el usuario vuelve a la pagina de mis-pedidos.
   const finalizarCompra = async (deliveryMethod, notes, shippingAddress = "") => {
     try {
       setLoading(true);
-      const order = await checkout(token, deliveryMethod, notes, shippingAddress);
-      setCart(null); // Limpiar carrito despues de comprar
-      return order;
+      // El backend guarda la info de entrega y retorna los datos del widget de Wompi
+      const wompiData = await checkout(token, deliveryMethod, notes, shippingAddress);
+      return wompiData;
     } catch (error) {
-      setMensaje("Error al finalizar la compra");
+      setMensaje("Error al procesar el checkout. Intenta de nuevo.");
       throw error;
     } finally {
       setLoading(false);
     }
   };
+
+  // Limpia el carrito del estado local (se llama desde OrderDetailPage
+  // cuando el usuario llega despues de pagar exitosamente)
+  const limpiarCarrito = () => setCart(null);
 
   return (
     <CartContext.Provider value={{
@@ -105,6 +112,7 @@ export function CartProvider({ children }) {
       actualizarCantidad,
       eliminarDelCarrito,
       finalizarCompra,
+      limpiarCarrito,
       cargarCarrito
     }}>
       {children}
