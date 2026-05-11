@@ -22,6 +22,9 @@ export default function PagoWompiPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const containerRef = useRef(null);
+  // Evita que el script se inserte dos veces en React Strict Mode (desarrollo).
+  // En produccion el effect corre una sola vez, este ref no tiene efecto.
+  const scriptInsertedRef = useRef(false);
 
   // Los datos de Wompi vienen de CartPage via navigate state.
   // Si location.state es null (ej: ProtectedRoute hizo un redirect intermedio),
@@ -42,6 +45,10 @@ export default function PagoWompiPage() {
       return;
     }
 
+    // Si el script ya fue insertado en esta instancia (Strict Mode corre el effect
+    // dos veces en dev), no repetir. En produccion este bloque nunca se ejecuta.
+    if (scriptInsertedRef.current) return;
+
     // Limpiar sessionStorage ahora que ya tenemos los datos en memoria
     sessionStorage.removeItem("wompiCheckout");
 
@@ -57,15 +64,15 @@ export default function PagoWompiPage() {
      * Al cargarse, el script reemplaza su propio elemento por un boton estilizado.
      *
      * Atributos obligatorios:
-     *   data-render          = "button"  -> renderiza el boton automaticamente
-     *   data-public-key      = llave publica de Wompi (pub_stagtest_...)
-     *   data-currency        = "COP"
-     *   data-amount-in-cents = monto en centavos (ej: $50.000 COP = 5000000 centavos)
-     *   data-reference       = identificador unico del pago (usamos el OrderId)
-     *   data-signature:integrity = SHA256(reference + amount + currency + integrity_key)
+     *   data-render              = "button"
+     *   data-public-key          = llave publica de Wompi
+     *   data-currency            = "COP"
+     *   data-amount-in-cents     = monto en centavos (Total * 100)
+     *   data-reference           = OrderId (referencia unica del pago)
+     *   data-signature:integrity = SHA256(reference+amount+currency+integrity_key)
      *
      * Atributos opcionales:
-     *   data-redirect-url    = URL de retorno despues del pago
+     *   data-redirect-url        = URL de retorno despues del pago
      */
     const script = document.createElement("script");
     script.src = "https://checkout.wompi.io/widget.js";
@@ -77,11 +84,13 @@ export default function PagoWompiPage() {
     script.setAttribute("data-signature:integrity", wompiData.integrityHash);
     script.setAttribute("data-redirect-url", redirectUrl);
 
-    // Limpiar contenido previo por si el componente se re-monta
     container.innerHTML = "";
     container.appendChild(script);
+    scriptInsertedRef.current = true;
 
-    // Cleanup: remover el script si el componente se desmonta
+    // Cleanup: se llama cuando el componente se desmonta (navegacion hacia otra pagina)
+    // No reseteamos scriptInsertedRef aqui: si React Strict Mode llama cleanup+setup
+    // de nuevo, la segunda ejecucion del effect ve scriptInsertedRef=true y sale.
     return () => {
       if (container) container.innerHTML = "";
     };
