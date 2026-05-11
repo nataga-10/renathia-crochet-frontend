@@ -23,8 +23,17 @@ export default function PagoWompiPage() {
   const navigate = useNavigate();
   const containerRef = useRef(null);
 
-  // Los datos de Wompi vienen de CartPage via navigate state
-  const wompiData = state?.wompiData;
+  // Los datos de Wompi vienen de CartPage via navigate state.
+  // Si location.state es null (ej: ProtectedRoute hizo un redirect intermedio),
+  // los recuperamos de sessionStorage como respaldo.
+  const wompiData = state?.wompiData ?? (() => {
+    try {
+      const stored = sessionStorage.getItem("wompiCheckout");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  })();
 
   useEffect(() => {
     // Si no hay datos (el usuario entro directo a la URL), redirigir al carrito
@@ -32,6 +41,9 @@ export default function PagoWompiPage() {
       navigate("/carrito", { replace: true });
       return;
     }
+
+    // Limpiar sessionStorage ahora que ya tenemos los datos en memoria
+    sessionStorage.removeItem("wompiCheckout");
 
     const container = containerRef.current;
     if (!container) return;

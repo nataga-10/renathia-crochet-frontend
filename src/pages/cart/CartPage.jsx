@@ -13,6 +13,7 @@ export default function CartPage() {
   const [recipientName, setRecipientName] = useState("");
   const [giftMessage, setGiftMessage] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
 
   const handleEditar = (item) => {
     navigate(`/producto/${item.productId}`, {
@@ -42,12 +43,22 @@ export default function CartPage() {
 
     try {
       setCheckingOut(true);
+      setCheckoutError("");
+
       // El backend guarda la info de entrega y retorna los datos para el widget de Wompi
       const wompiData = await finalizarCompra(deliveryMethod, finalNotes, shippingAddress.trim());
-      // Navegar a la pagina de pago pasando los datos de Wompi como estado del router
+
+      // Guardamos en sessionStorage como respaldo por si location.state se pierde
+      // (por ejemplo si ProtectedRoute hace un redirect intermedio)
+      sessionStorage.setItem("wompiCheckout", JSON.stringify(wompiData));
+
+      // Navegar a la pagina de pago
       navigate("/pago", { state: { wompiData } });
     } catch (error) {
       console.error("Error al preparar el pago:", error);
+      // Mostrar error visible para que el usuario sepa que algo fallo
+      const msg = error?.response?.data?.message || "Error al procesar el pago. Intenta de nuevo.";
+      setCheckoutError(msg);
     } finally {
       setCheckingOut(false);
     }
@@ -258,6 +269,17 @@ export default function CartPage() {
           </div>
         )}
       </div>
+
+      {/* Error de checkout — visible si el backend falla */}
+      {checkoutError && (
+        <div style={{
+          backgroundColor: "#FFF0F0", color: "#A00000",
+          border: "1px solid #FFAAAA", borderRadius: "6px",
+          padding: "12px 16px", marginBottom: "16px", fontWeight: "500"
+        }}>
+          {checkoutError}
+        </div>
+      )}
 
       {/* Botones de accion */}
       <div style={{ display: "flex", gap: "15px", justifyContent: "flex-end" }}>
