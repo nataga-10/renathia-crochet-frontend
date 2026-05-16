@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../context/CartContext";
 import logo from "../../assets/renathia_logo.png";
 
 const ROLE_LABELS = { 1: "Administrador", 2: "Cliente", 3: "Vendedor" };
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { setCartOpen, cart } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -40,7 +42,21 @@ export default function Navbar() {
           {/* Solo clientes */}
           {user?.roleId === 2 && (
             <>
-              <NavLink href="/carrito" active={isActive("/carrito")}>🛒 Carrito</NavLink>
+              <button
+                onClick={() => setCartOpen(true)}
+                style={{
+                  ...styles.navLink,
+                  position: "relative",
+                  background: "transparent",
+                  color: "var(--gray-dark)",
+                  fontWeight: 400,
+                }}
+              >
+                🛒 Carrito
+                {cart?.items?.length > 0 && (
+                  <span style={styles.cartBadge}>{cart.items.length}</span>
+                )}
+              </button>
               <NavLink href="/mis-pedidos" active={isActive("/mis-pedidos")}>Mis pedidos</NavLink>
             </>
           )}
@@ -194,6 +210,22 @@ const styles = {
     cursor: "pointer",
     transition: "all 0.15s",
     fontFamily: "inherit",
+  },
+  cartBadge: {
+    position: "absolute",
+    top: 2,
+    right: 2,
+    background: "var(--pink-dark)",
+    color: "white",
+    fontSize: 10,
+    fontWeight: 700,
+    borderRadius: "50%",
+    width: 16,
+    height: 16,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    lineHeight: 1,
   },
   actions: {
     flexShrink: 0,
