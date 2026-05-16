@@ -68,7 +68,7 @@ export default function PagoWompiPage() {
      *   data-redirect-url        = URL de retorno despues del pago
      */
     const script = document.createElement("script");
-    script.src = "https://checkout.wompi.io/widget.js";
+    script.src = "https://checkout.wompi.co/widget.js";
     script.setAttribute("data-render", "button");
     script.setAttribute("data-public-key", wompiData.publicKey);
     script.setAttribute("data-currency", wompiData.currency);
