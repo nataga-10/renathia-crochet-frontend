@@ -58,3 +58,10 @@ export const updateProfile = async (token, data) => {
   });
   return response.data;
 };
+
+export const deleteMyAccount = async (token) => {
+  const response = await axios.delete(`${API_URL}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};

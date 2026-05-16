@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getProfile, updateProfile } from "../../services/authService";
+import { getProfile, updateProfile, deleteMyAccount } from "../../services/authService";
 
 const ROLE_LABELS = { 1: "Administrador", 2: "Cliente", 3: "Vendedor" };
 const DOCUMENT_TYPES = ["CC", "NIT", "Pasaporte", "CE"];
 
 export default function ProfilePage() {
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [mensaje, setMensaje] = useState({ text: "", error: false });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     loadProfile();
@@ -57,6 +62,19 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setDeleteError("");
+    setDeleting(true);
+    try {
+      await deleteMyAccount(token);
+      logout();
+      navigate("/login");
+    } catch {
+      setDeleteError("Error al eliminar la cuenta. Intenta de nuevo.");
+      setDeleting(false);
+    }
+  };
+
   if (loading) return <div className="page"><p style={{ color: "var(--gray)" }}>Cargando perfil...</p></div>;
 
   return (
@@ -95,6 +113,16 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
+
+          {/* Eliminar cuenta — solo clientes */}
+          {user?.roleId === 2 && (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              style={styles.btnEliminar}
+            >
+              Eliminar mi cuenta
+            </button>
+          )}
         </div>
 
         {/* Formulario de edición */}
@@ -173,6 +201,42 @@ export default function ProfilePage() {
           </form>
         </div>
       </div>
+
+      {/* Modal de confirmación de eliminación */}
+      {showDeleteModal && (
+        <div style={styles.overlay} onClick={(e) => e.target === e.currentTarget && setShowDeleteModal(false)}>
+          <div style={styles.modal}>
+            <div style={styles.modalIcon}>⚠️</div>
+            <h3 style={styles.modalTitulo}>¿Eliminar tu cuenta?</h3>
+            <p style={styles.modalTexto}>
+              Esta acción no se puede deshacer. Tu cuenta y todos tus datos serán eliminados permanentemente.
+            </p>
+
+            {deleteError && (
+              <p style={{ color: "#C0405A", fontSize: 13, margin: "0 0 12px", textAlign: "center" }}>
+                {deleteError}
+              </p>
+            )}
+
+            <div style={styles.modalBotones}>
+              <button
+                style={styles.btnCancelar}
+                onClick={() => { setShowDeleteModal(false); setDeleteError(""); }}
+                disabled={deleting}
+              >
+                Cancelar
+              </button>
+              <button
+                style={styles.btnConfirmarEliminar}
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+              >
+                {deleting ? "Eliminando..." : "Eliminar cuenta"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -248,4 +312,65 @@ const styles = {
   label: { fontSize: 13, fontWeight: 600, color: "var(--gray-dark)" },
   hint: { fontSize: 11, color: "var(--gray)", marginTop: 2 },
   row: { display: "flex", gap: 12 },
+  btnEliminar: {
+    marginTop: 20,
+    width: "100%",
+    padding: "9px 0",
+    background: "none",
+    border: "1.5px solid #F4A7BB",
+    borderRadius: 8,
+    color: "#C0405A",
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    transition: "background 0.15s",
+  },
+  overlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.45)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 500,
+    padding: 20,
+  },
+  modal: {
+    background: "var(--white)",
+    borderRadius: 16,
+    boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+    padding: "36px 32px",
+    width: "100%",
+    maxWidth: 420,
+    textAlign: "center",
+  },
+  modalIcon: { fontSize: 40, marginBottom: 12 },
+  modalTitulo: { margin: "0 0 12px", fontSize: 20, fontWeight: 700, color: "#C0405A" },
+  modalTexto: { margin: "0 0 20px", fontSize: 14, color: "var(--gray-dark)", lineHeight: 1.6 },
+  modalBotones: { display: "flex", gap: 12 },
+  btnCancelar: {
+    flex: 1,
+    padding: "11px 0",
+    background: "var(--pink-light)",
+    border: "1.5px solid var(--border)",
+    borderRadius: 8,
+    fontSize: 14,
+    fontWeight: 600,
+    color: "var(--gray-dark)",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  },
+  btnConfirmarEliminar: {
+    flex: 1,
+    padding: "11px 0",
+    background: "#C0405A",
+    border: "none",
+    borderRadius: 8,
+    fontSize: 14,
+    fontWeight: 600,
+    color: "white",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  },
 };
