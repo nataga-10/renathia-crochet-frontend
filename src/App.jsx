@@ -19,6 +19,7 @@ import ProfilePage from "./pages/auth/ProfilePage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminReportesPage from "./pages/admin/AdminReportesPage";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import ProductDetailPage from "./pages/catalog/ProductDetailPage";
 import GalleryPage from "./pages/gallery/GalleryPage";
 import PagoWompiPage from "./pages/payment/PagoWompiPage";
@@ -91,6 +92,9 @@ function App() {
               } />
               <Route path="/admin/reportes" element={
                 <ProtectedRoute allowedRoles={[1]}><AdminReportesPage /></ProtectedRoute>
+              } />
+              <Route path="/admin/dashboard" element={
+                <ProtectedRoute allowedRoles={[1]}><AdminDashboardPage /></ProtectedRoute>
               } />
 
               <Route path="/" element={<CatalogPage />} />
