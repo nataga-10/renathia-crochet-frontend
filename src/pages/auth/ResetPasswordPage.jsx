@@ -4,6 +4,32 @@ import { useState } from "react";
 import { resetPassword } from "../../services/authService";
 import logo from "../../assets/renathia_logo.png";
 
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+
+function PasswordRequirements({ value }) {
+  const rules = [
+    { label: "Mínimo 8 caracteres", ok: value.length >= 8 },
+    { label: "Una letra mayúscula", ok: /[A-Z]/.test(value) },
+    { label: "Una letra minúscula", ok: /[a-z]/.test(value) },
+    { label: "Un número", ok: /\d/.test(value) },
+    { label: "Un carácter especial (!@#$%^&*)", ok: /[!@#$%^&*]/.test(value) },
+  ];
+  return (
+    <ul style={reqStyles.list}>
+      {rules.map((r) => (
+        <li key={r.label} style={{ ...reqStyles.item, color: r.ok ? "#16a34a" : "#9ca3af" }}>
+          <span style={{ marginRight: 6 }}>{r.ok ? "✓" : "○"}</span>{r.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const reqStyles = {
+  list: { listStyle: "none", margin: "6px 0 0", padding: 0 },
+  item: { fontSize: 12, display: "flex", alignItems: "center", marginBottom: 2 },
+};
+
 /**
  * Página de restablecimiento de contraseña.
  * Lee token y email de los query params del enlace enviado por correo.
@@ -62,13 +88,17 @@ export default function ResetPasswordPage() {
                   style={{ paddingRight: 44 }}
                   {...register("newPassword", {
                     required: "La contraseña es obligatoria",
-                    minLength: { value: 8, message: "Mínimo 8 caracteres" },
+                    pattern: {
+                      value: PASSWORD_REGEX,
+                      message: "La contraseña no cumple los requisitos"
+                    }
                   })}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
                   {showPassword ? "🙈" : "👁️"}
                 </button>
               </div>
+              <PasswordRequirements value={watch("newPassword") ?? ""} />
               {errors.newPassword && <p className="form-error">{errors.newPassword.message}</p>}
             </div>
 
