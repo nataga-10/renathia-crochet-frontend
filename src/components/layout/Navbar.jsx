@@ -56,6 +56,13 @@ export default function Navbar() {
               </NavLink>
             </>
           )}
+
+          {/* Solo Admin */}
+          {user?.roleId === 1 && (
+            <NavLink href="/admin/usuarios" active={isActive("/admin/usuarios")}>
+              Usuarios
+            </NavLink>
+          )}
         </div>
 
         {/* Perfil / acciones */}

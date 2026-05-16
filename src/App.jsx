@@ -17,6 +17,7 @@ import MyOrdersPage from "./pages/orders/MyOrdersPage";
 import OrderDetailPage from "./pages/orders/OrderDetailPage";
 import ProfilePage from "./pages/auth/ProfilePage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import ProductDetailPage from "./pages/catalog/ProductDetailPage";
 import GalleryPage from "./pages/gallery/GalleryPage";
 import PagoWompiPage from "./pages/payment/PagoWompiPage";
@@ -83,6 +84,9 @@ function App() {
               } />
               <Route path="/admin/productos/editar/:id" element={
                 <ProtectedRoute allowedRoles={[1, 3]}><EditProductPage /></ProtectedRoute>
+              } />
+              <Route path="/admin/usuarios" element={
+                <ProtectedRoute allowedRoles={[1]}><AdminUsersPage /></ProtectedRoute>
               } />
 
               <Route path="/" element={<CatalogPage />} />
