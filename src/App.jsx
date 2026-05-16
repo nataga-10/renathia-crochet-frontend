@@ -7,6 +7,7 @@ import CartDrawer from "./components/common/CartDrawer";
 import RegisterPage from "./pages/auth/RegisterPage";
 import LoginPage from "./pages/auth/LoginPage";
 import RecoverPasswordPage from "./pages/auth/RecoverPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import CatalogPage from "./pages/catalog/CatalogPage";
 import ProductsAdminPage from "./pages/admin/ProductsAdminPage";
 import CreateProductPage from "./pages/admin/CreateProductPage";
@@ -42,6 +43,7 @@ function App() {
               <Route path="/registro" element={<RegisterPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/recuperar-contrasena" element={<RecoverPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
               {/* Catálogo público */}
               <Route path="/catalogo" element={<CatalogPage />} />

@@ -36,6 +36,15 @@ export const recoverPassword = async (email) => {
   return response.data;
 };
 
+/**
+ * Restablece la contraseña usando el token recibido por correo.
+ * @param {object} data - { email, token, newPassword }
+ */
+export const resetPassword = async (data) => {
+  const response = await axios.post(`${API_URL}/auth/reset-password`, data);
+  return response.data;
+};
+
 export const getProfile = async (token) => {
   const response = await axios.get(`${API_URL}/auth/profile`, {
     headers: { Authorization: `Bearer ${token}` },
