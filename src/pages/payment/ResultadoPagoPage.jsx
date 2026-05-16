@@ -1,52 +1,79 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { getOrderById } from "../../services/orderService";
 
-/**
- * ResultadoPagoPage
- *
- * Pagina a la que Wompi redirige al cliente despues de intentar el pago.
- * Wompi agrega parametros en la URL:
- *   - id          : ID de la transaccion en Wompi
- *   - orderId     : nuestro OrderId (lo agregamos nosotros en el redirect URL)
- *
- * IMPORTANTE sobre el estado del pedido:
- *   Esta pagina solo muestra un mensaje al cliente.
- *   La actualizacion real del estado del pedido (PendingPayment -> PaymentReceived)
- *   la hace el WEBHOOK (POST /api/Payments/wompi-webhook), no esta pagina.
- *   Por eso puede haber un ligero retraso entre el pago y la actualizacion visible.
- *
- * Puede darse el caso de que:
- *   - El pago fue exitoso pero el webhook aun no llego -> el pedido sigue en PendingPayment momentaneamente.
- *   - El pago fue rechazado -> el pedido queda en PendingPayment, el cliente puede reintentar.
- */
+const MAX_INTENTOS = 15;   // 15 × 3 s = 45 s máximo de polling
+const INTERVALO_MS = 3000;
+
 export default function ResultadoPagoPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [segundos, setSegundos] = useState(8);
+  const { token } = useAuth();
 
   const orderId = searchParams.get("orderId");
-  // Wompi puede incluir mas params como ?id=TRX_ID&type=PAYMENT, pero solo usamos orderId
-  const transaccionId = searchParams.get("id");
 
-  // Cuenta regresiva y redireccion automatica al detalle del pedido
+  const [estadoPedido, setEstadoPedido] = useState("PendingPayment");
+  const [intentos, setIntentos] = useState(0);
+  const [segundos, setSegundos] = useState(5);
+  const pollingRef = useRef(null);
+  const cuentaRef = useRef(null);
+
+  const confirmado = estadoPedido !== "PendingPayment";
+  const agotado = !confirmado && intentos >= MAX_INTENTOS;
+
+  // Polling: consulta el estado del pedido cada INTERVALO_MS
   useEffect(() => {
-    if (!orderId) {
-      navigate("/mis-pedidos", { replace: true });
-      return;
-    }
+    if (!orderId || !token) return;
 
-    const intervalo = setInterval(() => {
+    const poll = async () => {
+      try {
+        const order = await getOrderById(token, orderId);
+        const status = order?.status ?? order?.Status ?? "PendingPayment";
+        setEstadoPedido(status);
+        setIntentos((n) => n + 1);
+
+        if (status !== "PendingPayment") {
+          clearInterval(pollingRef.current);
+        }
+      } catch {
+        setIntentos((n) => n + 1);
+      }
+    };
+
+    // Primera consulta inmediata, luego cada INTERVALO_MS
+    poll();
+    pollingRef.current = setInterval(poll, INTERVALO_MS);
+
+    return () => clearInterval(pollingRef.current);
+  }, [orderId, token]);
+
+  // Detener polling cuando se alcanza el máximo de intentos
+  useEffect(() => {
+    if (intentos >= MAX_INTENTOS) clearInterval(pollingRef.current);
+  }, [intentos]);
+
+  // Cuenta regresiva de redirección — solo arranca cuando el pago está confirmado
+  useEffect(() => {
+    if (!confirmado || !orderId) return;
+
+    cuentaRef.current = setInterval(() => {
       setSegundos((s) => {
         if (s <= 1) {
-          clearInterval(intervalo);
+          clearInterval(cuentaRef.current);
           navigate(`/mis-pedidos/${orderId}`, { replace: true });
         }
         return s - 1;
       });
     }, 1000);
 
-    return () => clearInterval(intervalo);
-  }, [orderId, navigate]);
+    return () => clearInterval(cuentaRef.current);
+  }, [confirmado, orderId, navigate]);
+
+  if (!orderId) {
+    navigate("/mis-pedidos", { replace: true });
+    return null;
+  }
 
   return (
     <div style={{
@@ -56,74 +83,135 @@ export default function ResultadoPagoPage() {
       textAlign: "center",
       fontFamily: "sans-serif"
     }}>
-      {/* Icono de exito */}
-      <div style={{
-        width: "72px",
-        height: "72px",
-        borderRadius: "50%",
-        backgroundColor: "#E8F5EE",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        margin: "0 auto 24px",
-        fontSize: "36px"
-      }}>
-        ✓
-      </div>
 
-      <h2 style={{ color: "#1A7A4A", marginBottom: "12px" }}>
-        Pago procesado
-      </h2>
-
-      <p style={{ color: "#555", lineHeight: "1.6", marginBottom: "8px" }}>
-        Tu pago fue enviado a Wompi para su procesamiento.
-        En unos momentos tu pedido sera actualizado.
-      </p>
-
-      {orderId && (
-        <p style={{ color: "#555", marginBottom: "24px" }}>
-          Pedido <strong>#{orderId}</strong>
-        </p>
+      {/* ── Pago confirmado ── */}
+      {confirmado && (
+        <>
+          <div style={styles.iconCircle("#E8F5EE")}>✓</div>
+          <h2 style={{ color: "#1A7A4A", marginBottom: "12px" }}>Pago confirmado</h2>
+          <p style={{ color: "#555", lineHeight: "1.6", marginBottom: "8px" }}>
+            Tu pago fue aprobado y tu pedido está siendo preparado.
+          </p>
+          <p style={{ color: "#555", marginBottom: "24px" }}>
+            Pedido <strong>#{orderId}</strong>
+          </p>
+          <button onClick={() => navigate(`/mis-pedidos/${orderId}`)} style={styles.btnPrimary}>
+            Ver mi pedido
+          </button>
+          <p style={{ color: "#aaa", fontSize: "13px", marginTop: "12px" }}>
+            Redirigiendo automáticamente en {segundos} segundos...
+          </p>
+        </>
       )}
 
-      {/* Nota sobre el webhook */}
-      <div style={{
-        backgroundColor: "#FFF8E1",
-        border: "1px solid #FFD54F",
-        borderRadius: "8px",
-        padding: "14px 16px",
-        marginBottom: "28px",
-        fontSize: "14px",
-        color: "#795548",
-        textAlign: "left"
-      }}>
-        <strong>Nota:</strong> Si el estado del pedido aun aparece como "Pendiente de pago",
-        espera unos segundos y recarga la pagina. La confirmacion llega a traves de Wompi.
-      </div>
+      {/* ── Verificando pago (polling en curso) ── */}
+      {!confirmado && !agotado && (
+        <>
+          <div style={styles.iconCircle("#FFF8E1")}>
+            <span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⏳</span>
+          </div>
+          <h2 style={{ color: "#795548", marginBottom: "12px" }}>Verificando pago...</h2>
+          <p style={{ color: "#555", lineHeight: "1.6", marginBottom: "24px" }}>
+            Wompi está procesando tu transacción. Esto puede tomar unos segundos.
+          </p>
+          <p style={{ color: "#555", marginBottom: "24px" }}>
+            Pedido <strong>#{orderId}</strong>
+          </p>
+          <div style={styles.infoBox}>
+            <div style={styles.progressBar(intentos, MAX_INTENTOS)} />
+            <p style={{ margin: "8px 0 0", fontSize: "13px", color: "#795548" }}>
+              Verificando... intento {intentos} de {MAX_INTENTOS}
+            </p>
+          </div>
+          <button onClick={() => navigate(`/mis-pedidos/${orderId}`)} style={styles.btnSecondary}>
+            Ver mi pedido
+          </button>
+        </>
+      )}
 
-      {/* Boton ir al pedido */}
-      <button
-        onClick={() => navigate(orderId ? `/mis-pedidos/${orderId}` : "/mis-pedidos")}
-        style={{
-          padding: "12px 32px",
-          backgroundColor: "#6B2D8B",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-          fontWeight: "bold",
-          fontSize: "15px",
-          marginBottom: "16px",
-          display: "block",
-          width: "100%"
-        }}>
-        Ver mi pedido
-      </button>
-
-      {/* Cuenta regresiva */}
-      <p style={{ color: "#aaa", fontSize: "13px" }}>
-        Redirigiendo automaticamente en {segundos} segundos...
-      </p>
+      {/* ── Tiempo agotado — webhook no llegó ── */}
+      {agotado && (
+        <>
+          <div style={styles.iconCircle("#FFF8E1")}>⚠️</div>
+          <h2 style={{ color: "#795548", marginBottom: "12px" }}>Pago en proceso</h2>
+          <p style={{ color: "#555", lineHeight: "1.6", marginBottom: "8px" }}>
+            Tu pago fue enviado a Wompi pero la confirmación aún no llegó.
+          </p>
+          <p style={{ color: "#555", marginBottom: "16px" }}>
+            Pedido <strong>#{orderId}</strong>
+          </p>
+          <div style={{ ...styles.infoBox, marginBottom: "20px" }}>
+            <strong>¿Qué hacer?</strong>
+            <ul style={{ textAlign: "left", margin: "8px 0 0", paddingLeft: 20, fontSize: "14px", color: "#795548" }}>
+              <li>Si Wompi aprobó el pago, el estado se actualizará en unos minutos.</li>
+              <li>Ve a "Mis pedidos" y recarga la página en un momento.</li>
+              <li>Si el problema persiste, contacta al soporte.</li>
+            </ul>
+          </div>
+          <button onClick={() => navigate(`/mis-pedidos/${orderId}`)} style={styles.btnPrimary}>
+            Ver mi pedido
+          </button>
+          <button onClick={() => navigate("/mis-pedidos")} style={{ ...styles.btnSecondary, marginTop: 10 }}>
+            Todos mis pedidos
+          </button>
+        </>
+      )}
     </div>
   );
 }
+
+const styles = {
+  iconCircle: (bg) => ({
+    width: "72px",
+    height: "72px",
+    borderRadius: "50%",
+    backgroundColor: bg,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    margin: "0 auto 24px",
+    fontSize: "36px",
+  }),
+  btnPrimary: {
+    padding: "12px 32px",
+    backgroundColor: "#6B2D8B",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "bold",
+    fontSize: "15px",
+    display: "block",
+    width: "100%",
+  },
+  btnSecondary: {
+    padding: "11px 32px",
+    backgroundColor: "transparent",
+    color: "#6B2D8B",
+    border: "1.5px solid #6B2D8B",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "600",
+    fontSize: "14px",
+    display: "block",
+    width: "100%",
+    marginTop: 12,
+  },
+  infoBox: {
+    backgroundColor: "#FFF8E1",
+    border: "1px solid #FFD54F",
+    borderRadius: "8px",
+    padding: "14px 16px",
+    marginBottom: "20px",
+    fontSize: "14px",
+    color: "#795548",
+    textAlign: "left",
+  },
+  progressBar: (intentos, max) => ({
+    height: 4,
+    borderRadius: 2,
+    background: `linear-gradient(to right, #C96EA0 ${(intentos / max) * 100}%, #f0d0e0 ${(intentos / max) * 100}%)`,
+    marginBottom: 4,
+    transition: "background 0.3s",
+  }),
+};
