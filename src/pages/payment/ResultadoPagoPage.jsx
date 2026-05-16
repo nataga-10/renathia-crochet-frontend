@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../context/CartContext";
 import { getOrderById } from "../../services/orderService";
 
 const MAX_INTENTOS = 15;   // 15 × 3 s = 45 s máximo de polling
@@ -10,6 +11,7 @@ export default function ResultadoPagoPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { token } = useAuth();
+  const { limpiarCarrito } = useCart();
 
   const orderId = searchParams.get("orderId");
 
@@ -52,6 +54,11 @@ export default function ResultadoPagoPage() {
   useEffect(() => {
     if (intentos >= MAX_INTENTOS) clearInterval(pollingRef.current);
   }, [intentos]);
+
+  // Limpiar carrito cuando el pago es confirmado
+  useEffect(() => {
+    if (confirmado) limpiarCarrito();
+  }, [confirmado]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cuenta regresiva de redirección — solo arranca cuando el pago está confirmado
   useEffect(() => {

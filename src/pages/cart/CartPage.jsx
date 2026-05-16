@@ -3,15 +3,24 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 export default function CartPage() {
-  const { cart, loading, mensaje, actualizarCantidad, eliminarDelCarrito, finalizarCompra } = useCart();
+  const { cart, loading, mensaje, actualizarCantidad, eliminarDelCarrito, finalizarCompra, checkoutDraft, setCheckoutDraft } = useCart();
   const navigate = useNavigate();
-  const [deliveryMethod, setDeliveryMethod] = useState("Shipping");
-  const [shippingAddress, setShippingAddress] = useState("");
+
+  const deliveryMethod = checkoutDraft.deliveryMethod;
+  const shippingAddress = checkoutDraft.shippingAddress;
+  const notes = checkoutDraft.notes;
+  const isGift = checkoutDraft.isGift;
+  const recipientName = checkoutDraft.recipientName;
+  const giftMessage = checkoutDraft.giftMessage;
+
+  const setDeliveryMethod = (v) => setCheckoutDraft((d) => ({ ...d, deliveryMethod: v }));
+  const setShippingAddress = (v) => setCheckoutDraft((d) => ({ ...d, shippingAddress: v }));
+  const setNotes = (v) => setCheckoutDraft((d) => ({ ...d, notes: v }));
+  const setIsGift = (v) => setCheckoutDraft((d) => ({ ...d, isGift: v }));
+  const setRecipientName = (v) => setCheckoutDraft((d) => ({ ...d, recipientName: v }));
+  const setGiftMessage = (v) => setCheckoutDraft((d) => ({ ...d, giftMessage: v }));
+
   const [addressError, setAddressError] = useState(false);
-  const [notes, setNotes] = useState("");
-  const [isGift, setIsGift] = useState(false);
-  const [recipientName, setRecipientName] = useState("");
-  const [giftMessage, setGiftMessage] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
 

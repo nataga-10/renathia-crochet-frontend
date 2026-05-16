@@ -12,6 +12,14 @@ export function CartProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutDraft, setCheckoutDraft] = useState({
+    deliveryMethod: "Shipping",
+    shippingAddress: "",
+    notes: "",
+    isGift: false,
+    recipientName: "",
+    giftMessage: "",
+  });
 
   // Cargar el carrito cuando el usuario inicia sesion
   useEffect(() => {
@@ -97,9 +105,19 @@ export function CartProvider({ children }) {
     }
   };
 
-  // Limpia el carrito del estado local (se llama desde OrderDetailPage
-  // cuando el usuario llega despues de pagar exitosamente)
-  const limpiarCarrito = () => setCart(null);
+  // Limpia el carrito y el borrador del checkout (se llama desde ResultadoPagoPage
+  // cuando el pago es confirmado)
+  const limpiarCarrito = () => {
+    setCart(null);
+    setCheckoutDraft({
+      deliveryMethod: "Shipping",
+      shippingAddress: "",
+      notes: "",
+      isGift: false,
+      recipientName: "",
+      giftMessage: "",
+    });
+  };
 
   return (
     <CartContext.Provider value={{
@@ -113,7 +131,9 @@ export function CartProvider({ children }) {
       eliminarDelCarrito,
       finalizarCompra,
       limpiarCarrito,
-      cargarCarrito
+      cargarCarrito,
+      checkoutDraft,
+      setCheckoutDraft,
     }}>
       {children}
     </CartContext.Provider>
