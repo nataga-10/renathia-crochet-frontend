@@ -4,6 +4,6 @@
     "exclude": ["/assets/*", "/*.{css,js,png,jpg,svg,ico}"]
   },
   "globalHeaders": {
-    "Content-Security-Policy": "default-src 'self'; script-src 'self' https://checkout.wompi.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://renathia-api.azurewebsites.net https://production.wompi.co https://sandbox.wompi.co https://checkout.wompi.io; frame-src https://checkout.wompi.io; object-src 'none'; base-uri 'self'"
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' https://checkout.wompi.co; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://renathia-api.azurewebsites.net https://production.wompi.co https://sandbox.wompi.co https://checkout.wompi.co; frame-src https://checkout.wompi.co; object-src 'none'; base-uri 'self'"
   }
 }
